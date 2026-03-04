@@ -5,15 +5,14 @@ import java.util.List;
 import com.example.api.dto.NombreCompletoDTO;
 import com.example.api.dto.UsuarioRequestDTO;
 import com.example.api.dto.UsuarioResponseDTO;
-import com.example.api.model.Usuario;
 
 public interface UsuarioService {
 
     UsuarioResponseDTO crear(UsuarioRequestDTO dto);
 
-    List<Usuario> listar();
+    List<UsuarioResponseDTO> listar();
 
-    Usuario obtener(Long id);
+    UsuarioResponseDTO obtener(Long id);
 
-    NombreCompletoDTO params(String nombre,String apellido);
+    NombreCompletoDTO params(String nombre, String apellido);
 }

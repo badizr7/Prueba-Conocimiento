@@ -2,6 +2,7 @@ package com.example.api.service.impl;
 
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.example.api.dto.NombreCompletoDTO;
@@ -18,36 +19,57 @@ import lombok.RequiredArgsConstructor;
 public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository repo;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UsuarioResponseDTO crear(UsuarioRequestDTO dto){
 
-        Usuario u = new Usuario(null,
-                dto.getNombre(),
-                dto.getApellido(),
-                dto.getUsername(),
-                dto.getPassword());
+        // Validar username duplicado
+        if (repo.existsByUsername(dto.getUsername())) {
+            throw new IllegalArgumentException("El username ya existe");
+        }
 
-        repo.save(u);
+        String passwordEncriptado = passwordEncoder.encode(dto.getPassword());
+
+        Usuario usuario = Usuario.builder()
+                .nombre(dto.getNombre())
+                .apellido(dto.getApellido())
+                .username(dto.getUsername())
+                .password(passwordEncriptado)
+                .build();
+
+        Usuario guardado = repo.save(usuario);
 
         return new UsuarioResponseDTO(
-                dto.getNombre().toUpperCase(),
-                dto.getApellido().toUpperCase());
+                guardado.getNombre().toUpperCase(),
+                guardado.getApellido().toUpperCase()
+        );
     }
 
     @Override
-    public List<Usuario> listar(){
-        return repo.findAll();
+    public List<UsuarioResponseDTO> listar(){
+        return repo.findAll()
+                .stream()
+                .map(u -> new UsuarioResponseDTO(
+                        u.getNombre(),
+                        u.getApellido()))
+                .toList();
     }
 
     @Override
-    public Usuario obtener(Long id){
-        return repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    public UsuarioResponseDTO obtener(Long id){
+
+        Usuario usuario = repo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        return new UsuarioResponseDTO(
+                usuario.getNombre(),
+                usuario.getApellido()
+        );
     }
 
     @Override
     public NombreCompletoDTO params(String nombre,String apellido){
-        return new NombreCompletoDTO(nombre+" "+apellido);
+        return new NombreCompletoDTO(nombre + " " + apellido);
     }
 }
